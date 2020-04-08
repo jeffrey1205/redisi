@@ -1,4 +1,4 @@
-package redisgo
+package redisi
 
 import (
 	"github.com/gomodule/redigo/redis"

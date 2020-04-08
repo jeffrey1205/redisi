@@ -1,7 +1,7 @@
 // Package redisgo 基于github.com/gomodule/redigo，封装了redis缓存的实现。
 // 使用时，可以参考 http://redisdoc.com/ 和 http://www.runoob.com/redis/ 中对redis命令及用法的讲解。
 // 对于没有封装的命令，也可以参考这里的实现方法，直接调用 `Do` 方法直接调用redis命令。
-package redisgo
+package redisi
 
 import (
 	"encoding/json"
@@ -288,6 +288,13 @@ func (c *Cacher) HGetBool(key, field string) (reply bool, err error) {
 func (c *Cacher) HGetObject(key, field string, val interface{}) error {
 	reply, err := c.HGet(key, field)
 	return c.decode(reply, err, val)
+}
+
+// GetKeys Get keys by prefix
+func (c *Cacher) GetKeys(prefix string) ([]string, error) {
+
+	keys, err := redis.Strings(c.Do("KEYS", prefix+"*"))
+	return keys, err
 }
 
 // HGetAll HGetAll("key", &val)
