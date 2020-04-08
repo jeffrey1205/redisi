@@ -290,6 +290,13 @@ func (c *Cacher) HGetObject(key, field string, val interface{}) error {
 	return c.decode(reply, err, val)
 }
 
+// GetKeys Get keys by prefix
+func (c *Cacher) GetKeys(prefix string) ([]string, error) {
+
+	keys, err := redis.Strings(c.Do("KEYS", prefix+"*"))
+	return keys, err
+}
+
 // HGetAll HGetAll("key", &val)
 func (c *Cacher) HGetAll(key string, val interface{}) error {
 	v, err := redis.Values(c.Do("HGETALL", c.getKey(key)))
