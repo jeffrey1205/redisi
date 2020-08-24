@@ -12,8 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	// "github.com/aiscrm/cache"
-
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -292,9 +290,40 @@ func (c *Cacher) HGetObject(key, field string, val interface{}) error {
 
 // GetKeys Get keys by prefix
 func (c *Cacher) GetKeys(prefix string) ([]string, error) {
-
 	keys, err := redis.Strings(c.Do("KEYS", prefix+"*"))
 	return keys, err
+}
+
+func (c *Cacher) ScanKeys(match string, count int) ([]string, error) {
+	keys := []string{}
+	index := 0
+
+	for {
+		ret, err := redis.Values(c.Do("SCAN", index, "MATCH", match, "COUNT", count))
+		if err != nil {
+			return keys, err
+		} else if len(ret) != 2 { //如果正确返回0为下一次起始下标，1当前的key
+			return keys, errors.New("error value len")
+		}
+
+		index, err = redis.Int(ret[0], err) //下标
+		if err != nil {
+			return keys, err
+		}
+
+		val2, err := redis.Strings(ret[1], err) //keys
+		if err != nil {
+			return keys, err
+		}
+
+		keys = append(keys, val2...)
+		//判断退出
+		if index == 0 {
+			break
+		}
+	}
+
+	return keys, nil
 }
 
 // HGetAll HGetAll("key", &val)
@@ -322,6 +351,7 @@ func (c *Cacher) BLPop(key string, timeout int) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if len(values) != 2 {
 		return nil, fmt.Errorf("redisgo: unexpected number of values, got %d", len(values))
 	}
